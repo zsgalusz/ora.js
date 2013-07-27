@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>ora.js sample</title>
+        <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro' rel='stylesheet' type='text/css'>
+        <style type="text/css">
+            html,
+            button,
+            input,
+            label {
+                color: #333333;
+            }
+
+            body {
+                font-size: 14px;
+                line-height: 20px;
+                font-family: 'Source Sans Pro', Arial, Helvetica, sans-serif;
+            }
+
+            #image canvas {
+                border: 1px solid #333333;
+                margin: 5px;
+                display: none;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>ora.js sample</h1>
+
+        <div id="upload">
+            <label>
+                <span>Select an .ora file:</span>
+                <input type="file" id="fileInput" onchange="inputChanged()">
+            </label>
+        </div>
+        <div>
+            <h2>Layers</h2>
+            <ul id="layers"></ul>
+        </div>
+        <div>
+            <h2>Image</h2>
+            <canvas id="image"></canvas>
+            <p id="thumbHint" style="display: none">Click on thumbnail to enlarge</p>
+        </div>
+
+        <script type="text/javascript" src="zip.js"></script>
+        <script type="text/javascript" src="zip-fs.js"></script>
+        <script type="text/javascript" src="../ora.js"></script>
+        <script type="text/javascript" src="../ora-blending.js"></script>
+        <script type="text/javascript" src="sample.js"></script>
+    </body>
+</html>
