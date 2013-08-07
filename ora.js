@@ -11,7 +11,7 @@
                 imageObj.src = uri;
             });
         } else if (onerror) {
-            onerror();           
+            onerror();
         }
     }
 
@@ -36,7 +36,7 @@
     }
 
     // Get the raw pixel data array for the layer
-    Layer.prototype.getImageData = function (width, height) {    
+    Layer.prototype.getImageData = function (width, height) {
         var tmpCanvas = document.createElement('canvas');
         tmpCanvas.width = width;
         tmpCanvas.height = height;
@@ -67,15 +67,17 @@
             that.layerCount = layerElems.length; //$layers.length;
             that.layers = [];
 
-            for (var i = 0; i < that.layerCount; i++) {
-                var layer = new Layer(layerElems[i], fs, function() {
-                    layersLoaded++;
-                    if (layersLoaded === that.layerCount) {
-                        ondone();
-                    }
-                });
+            var addLayer = function() {
+                layersLoaded++;
+                if (layersLoaded === that.layerCount) {
+                    ondone();
+                }
+            };
 
-                that.layers.push(layer);                
+            for (var i = 0; i < that.layerCount; i++) {
+                var layer = new Layer(layerElems[i], fs, addLayer);
+
+                that.layers.push(layer);
             }
         }
 
@@ -92,7 +94,7 @@
                     xml = new window.ActiveXObject("Microsoft.XMLDOM");
                     xml.async = false;
                     xml.loadXML(text);
-                } 
+                }
                 
                 var img = xml.getElementsByTagName('image')[0];
                 that.width = img.getAttribute('w');
@@ -144,7 +146,7 @@
     OraFile.prototype.drawComposite = function (canvas) {
         canvas.width = this.width;
         canvas.height = this.height;
-        var layerIdx = this.layerCount, 
+        var layerIdx = this.layerCount,
             context = canvas.getContext('2d'),
             layer, imgData;
 
@@ -167,7 +169,7 @@
                     obj.ora.blending.blend(src, imgData.data, layer.opacity, filter);
                 }
 
-                layerIdx--;            
+                layerIdx--;
             }
 
             context.putImageData(imgData, 0, 0);
@@ -185,7 +187,7 @@
                 }
 
                 layerIdx--;
-            }    
+            }
         }
     };
 
@@ -202,6 +204,6 @@
         load: loadFile,
 
         // enable use of prerendered image instead of layers (if present)
-        enablePrerendered : true      
+        enablePrerendered : true
     };
 })(this);

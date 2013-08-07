@@ -20,8 +20,8 @@
         for (var i = 0, n = dst.length; i < n; i += 4)
         {
             var srcA = (src[i+3] / 255) * opacity;
-            if (srcA === 0) { 
-                continue; 
+            if (srcA === 0) {
+                continue;
             }
 
             var dstA = dst[i+3] / 255;
@@ -41,7 +41,7 @@
         return src;
     }
 
-    function multiplyFilter(src, dst) {   
+    function multiplyFilter(src, dst) {
         var mlt = src * dst;
         return Math.min(mlt, 1);
     }
