@@ -17,7 +17,7 @@ function renderOra(ora) {
     layerList.innerHTML = "";
     oraFile = ora;
 
-    for(i = 0; i < oraFile.layerCount; i++) {
+    for(i = 0; i < oraFile.layers.length; i++) {
         layerItem = document.createElement('li');
         layerItem.innerHTML = oraFile.layers[i].name || "<i>untitled layer</i>";
         layerList.appendChild(layerItem);

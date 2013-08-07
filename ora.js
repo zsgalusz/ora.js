@@ -27,26 +27,6 @@
         this.visibility = 'visible';
     }
 
-    // Load layer info and contents from the file
-    Layer.prototype.load = function (layerElement, zipfs, onload) {
-        var that = this;
-
-        this.name = layerElement.getAttribute('name');
-        this.x = layerElement.getAttribute('x') || 0;
-        this.y = layerElement.getAttribute('y') || 0;
-        this.composite = layerElement.getAttribute('composite-op') || 'svg:src-over';
-        this.opacity = layerElement.getAttribute('opacity') || 1;
-        this.visibility = layerElement.getAttribute('visibility') || 'visible';
-
-        extractImage(layerElement.getAttribute('src'), zipfs, function() {
-            that.image = this;
-            that.width = this.width;
-            that.height = this.height;
-
-            onload();
-        });
-    };
-
     // Get the raw pixel data array for the layer
     Layer.prototype.getImageData = function (width, height) {
         var tmpCanvas = document.createElement('canvas');
@@ -62,7 +42,6 @@
         this.width = width || 0;
         this.height = height || 0;
         this.layers = [];
-        this.layerCount = 0;
     }
 
     // Load the file contents from a blob
@@ -76,19 +55,35 @@
             var layersLoaded = 0,
                layerElems = image.getElementsByTagName('stack')[0].getElementsByTagName('layer');
 
-            that.layerCount = layerElems.length; //$layers.length;
+            var layerCount = layerElems.length;
             that.layers = [];
 
-            var addLayer = function() {
-                layersLoaded++;
-                if (layersLoaded === that.layerCount) {
-                    ondone();
-                }
+            var onExtract = function(layer) {
+                return function() {
+                    layer.image = this;
+                    layer.width = this.width;
+                    layer.height = this.height;
+
+                    layersLoaded++;
+                    if (layersLoaded === layerCount) {
+                        ondone();
+                    }
+                };
             };
 
-            for (var i = 0; i < that.layerCount; i++) {
+            for (var i = 0; i < layerCount; i++) {
                 var layer = new Layer();
-                layer.load(layerElems[i], fs, addLayer);
+                var layerElement = layerElems[i];
+
+                layer.name = layerElement.getAttribute('name');
+                layer.x = layerElement.getAttribute('x') || 0;
+                layer.y = layerElement.getAttribute('y') || 0;
+                layer.composite = layerElement.getAttribute('composite-op') || 'svg:src-over';
+                layer.opacity = layerElement.getAttribute('opacity') || 1;
+                layer.visibility = layerElement.getAttribute('visibility') || 'visible';
+
+                extractImage(layerElement.getAttribute('src'), fs, onExtract(layer));
+
                 that.layers.push(layer);
             }
         }
@@ -158,7 +153,7 @@
     OraFile.prototype.drawComposite = function (canvas) {
         canvas.width = this.width;
         canvas.height = this.height;
-        var layerIdx = this.layerCount,
+        var layerIdx = this.layers.length,
             context = canvas.getContext('2d'),
             layer, imgData;
 
@@ -214,6 +209,7 @@
 
     obj.ora = {
         Ora : OraFile,
+        OraLayer : Layer,
         load: loadFile,
 
         // enable use of prerendered image instead of layers (if present)
