@@ -71,7 +71,7 @@
                 };
             };
 
-            for (var i = 0; i < layerCount; i++) {
+            for (var i = layerCount - 1; i >= 0; i--) {
                 var layer = new Layer();
                 var layerElement = layerElems[i];
 
@@ -153,8 +153,9 @@
     OraFile.prototype.drawComposite = function (canvas) {
         canvas.width = this.width;
         canvas.height = this.height;
-        var layerIdx = this.layers.length,
+        var layerCount = this.layers.length,
             context = canvas.getContext('2d'),
+            layerIdx = 0,
             layer, imgData;
 
         context.clearRect(0, 0, canvas.width, canvas.height);
@@ -167,8 +168,8 @@
         if (obj.ora.blending) {
             imgData = context.getImageData(0, 0, this.width, this.height);
 
-            while (layerIdx) {
-                layer = this.layers[layerIdx - 1];
+            while (layerCount > layerIdx) {
+                layer = this.layers[layerIdx ];
 
                 if (layer && layer.image && (layer.visibility === 'visible' || layer.visibility === undefined)) {
                     var filter = obj.ora.blending[layer.composite] || obj.ora.blending.normal;
@@ -176,13 +177,13 @@
                     obj.ora.blending.blend(src, imgData.data, layer.opacity, filter);
                 }
 
-                layerIdx--;
+                layerIdx++;
             }
 
             context.putImageData(imgData, 0, 0);
         } else {
-            while (layerIdx) {
-                layer = this.layers[layerIdx - 1];
+            while (layerCount > layerIdx) {
+                layer = this.layers[layerIdx];
                 if (layer && layer.image && (layer.visibility === 'visible' || layer.visibility === undefined)) {
                     if (layer.opacity === undefined) {
                         context.globalAlpha = 1;
@@ -193,9 +194,21 @@
                     context.drawImage(layer.image, layer.x, layer.y);
                 }
 
-                layerIdx--;
+                layerIdx++;
             }
         }
+    };
+
+    // Add a new layer to the image
+    // index can optionally specify the position for the new layer
+    OraFile.prototype.addLayer = function (name, index) {
+        var layer = new Layer(this.width, this.height, name);
+        if(index !== undefined && index < this.layers.length && index >= 0) {
+            this.layers.splice(index, 0, layer);
+        } else {
+            this.layers.push(layer);
+        }
+        return layer;
     };
 
     // Create and populate an OraFile object from a blob

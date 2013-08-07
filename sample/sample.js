@@ -12,15 +12,17 @@ function enlargeThumb() {
 }
 
 function renderOra(ora) {
-    var layerItem, i;
+    var layerItem,
+        i = ora.layers.length;
 
     layerList.innerHTML = "";
     oraFile = ora;
 
-    for(i = 0; i < oraFile.layers.length; i++) {
+    while(i) {
         layerItem = document.createElement('li');
-        layerItem.innerHTML = oraFile.layers[i].name || "<i>untitled layer</i>";
+        layerItem.innerHTML = oraFile.layers[i - 1].name || "<i>untitled layer</i>";
         layerList.appendChild(layerItem);
+        i--;
     }
 
     oraFile.drawThumbnail(canvas);
