@@ -56,12 +56,12 @@
     }
 
     function dodgeFilter(src, dst) {
-        if (dst === 0) {
-            return 0;
-        }
-
         if (src === 1) {
             return 1;
+        }
+
+        if (dst === 0) {
+            return 0;
         }
 
         var dodge = dst  / (1 - src);
