@@ -16,15 +16,27 @@
     }
 
     // Layer object constructor.
-    function Layer(layerElement, zipfs, onload) {
+    function Layer(width, height, name) {
+        this.name = name;
+        this.width = width || 0;
+        this.height = height || 0;
+        this.x = 0;
+        this.y = 0;
+        this.composite = 'svg:src-over';
+        this.opacity = 1;
+        this.visibility = 'visible';
+    }
+
+    // Load layer info and contents from the file
+    Layer.prototype.load = function (layerElement, zipfs, onload) {
         var that = this;
 
         this.name = layerElement.getAttribute('name');
-        this.x = layerElement.getAttribute('x');
-        this.y = layerElement.getAttribute('y');
-        this.composite = layerElement.getAttribute('composite-op');
-        this.opacity = layerElement.getAttribute('opacity');
-        this.visibility = layerElement.getAttribute('visibility');
+        this.x = layerElement.getAttribute('x') || 0;
+        this.y = layerElement.getAttribute('y') || 0;
+        this.composite = layerElement.getAttribute('composite-op') || 'svg:src-over';
+        this.opacity = layerElement.getAttribute('opacity') || 1;
+        this.visibility = layerElement.getAttribute('visibility') || 'visible';
 
         extractImage(layerElement.getAttribute('src'), zipfs, function() {
             that.image = this;
@@ -33,7 +45,7 @@
 
             onload();
         });
-    }
+    };
 
     // Get the raw pixel data array for the layer
     Layer.prototype.getImageData = function (width, height) {
@@ -46,9 +58,9 @@
     };
 
     // OraFile constructor
-    function OraFile() {
-        this.width = 0;
-        this.height = 0;
+    function OraFile(width, height) {
+        this.width = width || 0;
+        this.height = height || 0;
         this.layers = [];
         this.layerCount = 0;
     }
@@ -75,8 +87,8 @@
             };
 
             for (var i = 0; i < that.layerCount; i++) {
-                var layer = new Layer(layerElems[i], fs, addLayer);
-
+                var layer = new Layer();
+                layer.load(layerElems[i], fs, addLayer);
                 that.layers.push(layer);
             }
         }
@@ -201,6 +213,7 @@
     }
 
     obj.ora = {
+        Ora : OraFile,
         load: loadFile,
 
         // enable use of prerendered image instead of layers (if present)
