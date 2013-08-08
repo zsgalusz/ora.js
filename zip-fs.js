@@ -432,17 +432,17 @@
 	ZipDirectoryEntryProto.importData64URI = function(dataURI, onend, onerror) {
 		this.importZip(new Data64URIReader(dataURI), onend, onerror);
 	};
-	ZipDirectoryEntryProto.exportBlob = function(onend, onprogress, onerror) {
-		this.exportZip(new BlobWriter("application/zip"), onend, onprogress, onerror);
+	ZipDirectoryEntryProto.exportBlob = function(onend, type, onprogress, onerror) {
+		this.exportZip(new BlobWriter(type || "application/zip"), onend, onprogress, onerror);
 	};
 	ZipDirectoryEntryProto.exportText = function(onend, onprogress, onerror) {
 		this.exportZip(new TextWriter(), onend, onprogress, onerror);
 	};
-	ZipDirectoryEntryProto.exportFileEntry = function(fileEntry, onend, onprogress, onerror) {
-		this.exportZip(new zip.FileWriter(fileEntry, "application/zip"), onend, onprogress, onerror);
+	ZipDirectoryEntryProto.exportFileEntry = function(fileEntry, onend, type, onprogress, onerror) {
+		this.exportZip(new zip.FileWriter(fileEntry, type || "application/zip"), onend, onprogress, onerror);
 	};
-	ZipDirectoryEntryProto.exportData64URI = function(onend, onprogress, onerror) {
-		this.exportZip(new Data64URIWriter("application/zip"), onend, onprogress, onerror);
+	ZipDirectoryEntryProto.exportData64URI = function(onend, type, onprogress, onerror) {
+		this.exportZip(new Data64URIWriter(type ||"application/zip"), onend, onprogress, onerror);
 	};
 	ZipDirectoryEntryProto.importZip = function(reader, onend, onerror) {
 		var that = this;
@@ -511,17 +511,17 @@
 			resetFS(this);
 			this.root.importData64URI(dataURI, onend, onerror);
 		},
-		exportBlob : function(onend, onprogress, onerror) {
-			this.root.exportBlob(onend, onprogress, onerror);
+		exportBlob : function(onend, type, onprogress, onerror) {
+			this.root.exportBlob(onend, type, onprogress, onerror);
 		},
 		exportText : function(onend, onprogress, onerror) {
 			this.root.exportText(onend, onprogress, onerror);
 		},
-		exportFileEntry : function(fileEntry, onend, onprogress, onerror) {
-			this.root.exportFileEntry(fileEntry, onend, onprogress, onerror);
+		exportFileEntry : function(fileEntry, onend, type, onprogress, onerror) {
+			this.root.exportFileEntry(fileEntry, onend, type, onprogress, onerror);
 		},
-		exportData64URI : function(onend, onprogress, onerror) {
-			this.root.exportData64URI(onend, onprogress, onerror);
+		exportData64URI : function(onend, type, onprogress, onerror) {
+			this.root.exportData64URI(onend, type, onprogress, onerror);
 		}
 	};
 
