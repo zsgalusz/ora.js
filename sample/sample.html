@@ -17,31 +17,65 @@
                 font-family: 'Source Sans Pro', Arial, Helvetica, sans-serif;
             }
 
-            #image canvas {
-                border: 1px solid #333333;
+            #image {
+                border: 3px dashed #333333;
                 margin: 5px;
-                display: none;
+            }
+
+            #layers {
+                display: none;                 
+            }
+
+            .selected {
+                background: #CCCCCC;
             }
         </style>
     </head>
     <body>
         <h1>ora.js sample</h1>
-
-        <div id="upload">
-            <label>
-                <span>Select an .ora file:</span>
-                <input type="file" id="fileInput" onchange="inputChanged()">
-            </label>
+        <div>
+            <h2>Image</h2>
+            <div>
+                <input type="file" id="fileInput" onchange="loadFile()" style="display: none">
+                <input id="saveButton" type="button" value="Save" onclick="saveFile()" disabled>
+                <input id="loadButton" type="button" value="Load" onclick="pickOra()">
+                <label>Width: <input type="text" id="newWidth" value="100" size="4">px</label>
+                <label>Height: <input type="text" id="newHeight" value="100" size="4">px</label>
+                <input type="button" id="newButton" value="Create" onclick="createFile()">
+                <p id="thumbHint" style="display: none">Click on thumbnail to enlarge</p>
+            </div>
+            <canvas id="image"></canvas>
         </div>
         <div>
             <h2>Layers</h2>
+            <div>
+                <input type="file" id="layerFile" onchange="addLayer()" accept="image/png" style="display: none">
+                <input type="button" id="addLayer" value="Add" onclick="pickLayer()" disabled>
+                <input type="button" id="delLayer" value="Delete" onclick="deleteLayer()" disabled>
+                <input type="button" id="upLayer" value="Up" onclick="upLayer()" disabled>
+                <input type="button" id="downLayer" value="Down" onclick="downLayer()" disabled>
+            </div>
             <ul id="layers"></ul>
-        </div>
-        <div>
-            <h2>Image</h2>
-            <canvas id="image"></canvas>
-            <input id="saveButton" type="button" value="Save" onclick="saveFile()" disabled>
-            <p id="thumbHint" style="display: none">Click on thumbnail to enlarge</p>
+            <div>
+                <label><input type="range" id="opacity" min="0" max="100" step="1" value="100" disabled>100%</label>
+            </div>
+            <div>
+                <input type="button" id="visibleToggle" value="Hide" disabled>
+                <select id="layerMode" disabled>
+                    <option value="svg:src-over">Normal</option>
+                    <option value="svg:multiply">Multiply</option>
+                    <option value="svg:screen">Screen</option>
+                    <option value="svg:overlay">Overlay</option>
+                    <option value="svg:color-dodge">Color dodge</option>
+                    <option value="svg:color-burn">Color burn</option>
+                    <option value="svg:darken">Darken</option>
+                    <option value="svg:lighten">Lighten</option>
+                    <option value="svg:plus">Additive</option>
+                    <option value="svg:difference">Difference</option>
+                    <option value="svg:hard-light">Hard light</option>
+                    <option value="svg:soft-light">Soft light</option>
+                </select>
+            </div>
         </div>
 
         <script type="text/javascript" src="../zip.js"></script>

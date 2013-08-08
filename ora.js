@@ -37,6 +37,7 @@
         img.onload = function () {
             canvas.width = width;
             canvas.height = height;
+            ctx.clearRect(0, 0, width, height);
             ctx.drawImage(img, 0, 0, width, height);
             callback();
         };
