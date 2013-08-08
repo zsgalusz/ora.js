@@ -27,14 +27,16 @@
         this.visibility = 'visible';
     }
 
-    // Get the raw pixel data array for the layer
-    Layer.prototype.getImageData = function (width, height) {
-        var tmpCanvas = document.createElement('canvas');
-        tmpCanvas.width = width;
-        tmpCanvas.height = height;
+    // Draw layer onto a new canvas element
+    Layer.prototype.toCanvas = function (canvas, width, height) {
+        var tmpCanvas = canvas || document.createElement('canvas');
+        tmpCanvas.width = width || this.width;
+        tmpCanvas.height = height || this.height;
+
         var tmpCtx = tmpCanvas.getContext('2d');
+        tmpCtx.clearRect(0, 0, tmpCanvas.width, tmpCanvas.height);
         tmpCtx.drawImage(this.image, this.x, this.y);
-        return tmpCtx.getImageData(0, 0, tmpCanvas.width, tmpCanvas.height).data;
+        return tmpCanvas;
     };
 
     // OraFile constructor
@@ -156,7 +158,7 @@
         var layerCount = this.layers.length,
             context = canvas.getContext('2d'),
             layerIdx = 0,
-            layer, imgData;
+            layer, imgData, tmpCanvas;
 
         context.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -173,7 +175,8 @@
 
                 if (layer && layer.image && (layer.visibility === 'visible' || layer.visibility === undefined)) {
                     var filter = obj.ora.blending[layer.composite] || obj.ora.blending.normal;
-                    var src = layer.getImageData(this.width, this.height);
+                    var srcCanvas = layer.toCanvas(tmpCanvas, this.width, this.height);
+                    var src = srcCanvas.getContext('2d').getImageData(0, 0, srcCanvas.width, srcCanvas.height).data;
                     obj.ora.blending.blend(src, imgData.data, layer.opacity, filter);
                 }
 
