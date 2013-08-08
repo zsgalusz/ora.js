@@ -69,9 +69,9 @@
     }
 
     function burnFilter(src, dst) {
-        if (dst === 1) {
+        /*if (dst === 1) {
             return 1;
-        }
+        }*/
 
         if (src === 0) {
             return 0;
@@ -90,7 +90,7 @@
     }
 
     function plusFilter(src, dst) {
-        return Math.max(src + dst, 1);
+        return Math.min(src + dst, 1);
     }
 
     function hardLightFilter(src, dst) {
