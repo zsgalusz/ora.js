@@ -10,24 +10,27 @@ Features
  * Layers
  * Layer blending modes
 
-Dependencies
----
- *  [zip.js](http://gildas-lormeau.github.com/zip.js/)
-
 Install
 ---
-Just copy ora.js and the dependencies to your scripts folder. If you want layer blending modes, copy ora-blending.js too.
+Just copy ora.js and the included dependencies to your scripts folder. If you want layer blending modes, copy ora-blending.js too.
 
 In your HTML file, include the libraries:
 
 ```
-        <script type="text/javascript" src="zip.js"></script>
-        <script type="text/javascript" src="zip-fs.js"></script>
-        <script type="text/javascript" src="ora.js"></script>
-        <script type="text/javascript" src="ora-blending.js"></script>
+    <script type="text/javascript" src="zip.js"></script>
+    <script type="text/javascript" src="zip-fs.js"></script>
+    <script type="text/javascript" src="ora.js"></script>
+    <script type="text/javascript" src="ora-blending.js"></script>
 
 ```
-Note that you might need extra configuration for zip.js to find its own scripts.
+
+Note that you might need extra configuration for zip.js to find its own scripts:
+
+```
+    <script type="text/javascript">
+        zip.workerScriptsPath = "resources/";
+    </script>
+```
 
 Usage
 ---
@@ -39,3 +42,6 @@ ora.load(fileInput.files[0], function(oraFile) {
 });
 ```
 
+Dependencies
+---
+The project is using a slightly modified version the [zip.js](http://gildas-lormeau.github.io/zip.js/) library.

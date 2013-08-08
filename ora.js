@@ -15,6 +15,33 @@
         }
     }
 
+    // Resize a canvas to the given size
+    function resize(canvas, width, height, callback) {
+        if(canvas.width <= width && canvas.height <= height) {
+            callback();
+        }
+
+        var ctx = canvas.getContext('2d'),
+            oldCanvas = canvas.toDataURL("image/png"),
+            img = new Image(),
+            aspect = canvas.width / canvas.height;
+
+        if(aspect >= 1) {
+            height = width / aspect;
+        }
+        else {
+            width = height * aspect;
+        }
+
+        img.src = oldCanvas;
+        img.onload = function () {
+            canvas.width = width;
+            canvas.height = height;
+            ctx.drawImage(img, 0, 0, width, height);
+            callback();
+        };
+    }
+
     // Layer object constructor.
     function Layer(width, height, name) {
         this.name = name;
@@ -137,6 +164,61 @@
         }
 
         fs.importBlob(blob, loadOra);
+    };
+
+    OraFile.prototype.save = function(ondone) {
+        var fs = new zip.fs.FS(),
+            thumbs = fs.root.addDirectory('Thumbnails'),
+            data = fs.root.addDirectory('data'),
+            tmpCanvas = document.createElement('canvas'),
+            xmlDoc = document.implementation.createDocument(null, null, null),
+            serializer = new XMLSerializer(),
+            i = this.layers.length,
+            layer, url, name, xelem, celem;
+
+        fs.root.addText("mimetype", "image/openraster");
+
+
+        xelem = xmlDoc.createElement('image');
+        xelem.setAttribute('w', this.width);
+        xelem.setAttribute('h', this.height);
+        xmlDoc.appendChild(xelem);
+
+        celem = xmlDoc.createElement('stack');
+        xelem.appendChild(celem);
+        xelem = celem;
+
+        while(i) {
+            layer = this.layers[i - 1];
+
+            celem = xmlDoc.createElement('layer');
+            celem.setAttribute('name', layer.name || ('layer' + i));
+            celem.setAttribute('x', layer.x);
+            celem.setAttribute('y', layer.y);
+            celem.setAttribute('composite-op', layer.composite);
+            celem.setAttribute('opacity', layer.opacity);
+            celem.setAttribute('visibility', layer.visibility);
+
+            url = layer.toCanvas().toDataURL('image/png');
+            name = 'layer' + i + '.png';
+            celem.setAttribute('src', 'data/' + name);
+            data.addData64URI(name, url);
+            xelem.appendChild(celem);
+            i--;
+        }
+
+        fs.root.addText('stack.xml', serializer.serializeToString(xmlDoc));
+
+        this.drawComposite(tmpCanvas);
+        url = tmpCanvas.toDataURL('image/png');
+        fs.root.addData64URI('mergedimage.png', url);
+
+        resize(tmpCanvas, 256, 256, function() {
+            url = tmpCanvas.toDataURL('image/png');
+            thumbs.addData64URI('thumbnail.png', url);
+
+            fs.exportBlob(ondone, 'image/openraster');
+        });
     };
 
     // Draw the thumbnail into a canvas element
