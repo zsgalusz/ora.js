@@ -1,8 +1,10 @@
 var oraFile,
     layerList = document.getElementById('layers'),
     canvas = document.getElementById('image'),
+    backCanvas = document.createElement('canvas'),
     selectedLayer = -1,
-    loadedComposite = false;
+    redrawInProgress = false,
+    redrawRequested = false;
 
 function enableEditing() {
     document.getElementById('saveButton').disabled = false;
@@ -73,10 +75,30 @@ function selectLayer(index) {
 }
 
 function drawComposite() {
-    if(oraFile) {
-        oraFile.drawComposite(canvas);
-        loadedComposite = true;
+    if(!oraFile) {
+        return;
     }
+
+    if(redrawInProgress || redrawRequested) {
+        redrawRequested = true;
+        return;
+    }
+
+    oraFile.drawComposite(backCanvas, function() {        redrawInProgress = false;
+
+        if(!redrawRequested) {
+            canvas.width = backCanvas.width;
+            canvas.height = backCanvas.height;
+            var ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(backCanvas, 0, 0);
+        }
+        else {
+            redrawRequested = false;
+            drawComposite();
+        }
+    });
+    
 }
 
 function onLoadComplete(loadedOra) {
@@ -184,7 +206,6 @@ function downLayer() {
 function setOpacity() {
     oraFile.layers[selectedLayer].opacity = document.getElementById('opacity').value / 100;
     drawComposite();
-
 }
 
 function setLayerMode() {

@@ -122,7 +122,7 @@
         return Math.abs(src - dst);
     }
 
-    ora.blending = {
+    self.blending = {
         normal: sourceOverFilter,
         multiply: multiplyFilter,
         screen: screenFilter,
@@ -156,5 +156,4 @@
 
         blend: applyBlending
     };
-
 })();

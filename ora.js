@@ -78,8 +78,11 @@
     // Based on the draft specification from May 2013
     // http://www.freedesktop.org/wiki/Specifications/OpenRaster/Draft/
     OraFile.prototype.load = function (blob, onload) {
-        var fs = new zip.fs.FS();
-        var that = this;
+        zip.workerScriptsPath = obj.ora.scriptsPath;
+        zip.useWebWorkers = obj.ora.enableWorkers;
+
+        var fs = new zip.fs.FS(),
+            that = this;
 
         function loadLayers(image, ondone) {
             var layersLoaded = 0,
@@ -168,6 +171,9 @@
     };
 
     OraFile.prototype.save = function(ondone) {
+        zip.workerScriptsPath = obj.ora.scriptsPath;
+        zip.useWebWorkers = obj.ora.enableWorkers;
+
         var fs = new zip.fs.FS(),
             thumbs = fs.root.addDirectory('Thumbnails'),
             data = fs.root.addDirectory('data'),
@@ -235,13 +241,19 @@
 
     // Draw the full size composite image from the layer data.
     // Uses the prerendered image if present and enabled
-    OraFile.prototype.drawComposite = function (canvas) {
+    OraFile.prototype.drawComposite = function (canvas, ondone) {
         canvas.width = this.width;
         canvas.height = this.height;
-        var layerCount = this.layers.length,
-            context = canvas.getContext('2d'),
-            layerIdx = 0,
-            layer, imgData, tmpCanvas;
+
+        if(!this.layers) {
+            if(ondone) {
+                ondone();
+            }
+
+            return;
+        }
+
+        var context = canvas.getContext('2d');
 
         context.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -250,40 +262,143 @@
             return;
         }
 
-        if (obj.ora.blending) {
-            imgData = context.getImageData(0, 0, this.width, this.height);
+        if (!obj.blending) {
+            composeNoBlend(this, context, ondone);
+            return;
+        }
 
-            while (layerCount > layerIdx) {
-                layer = this.layers[layerIdx ];
+        if(!obj.ora.enableWorkers || !window.Worker) {
+            compose(this, context, ondone);
+            return;
+        }
 
-                if (layer && layer.image && (layer.visibility === 'visible' || layer.visibility === undefined)) {
-                    var filter = obj.ora.blending[layer.composite] || obj.ora.blending.normal;
-                    var srcCanvas = layer.toCanvas(tmpCanvas, this.width, this.height);
-                    var src = srcCanvas.getContext('2d').getImageData(0, 0, srcCanvas.width, srcCanvas.height).data;
-                    obj.ora.blending.blend(src, imgData.data, layer.opacity, filter);
+        composeWorkers(this, context, ondone);
+    };
+
+    function composeWorkers (oraFile, context, ondone) {
+        var layerCache = [],
+            startLayer = -1,
+            worker, i, tmpCanvas;
+
+        for (i = 0; i < oraFile.layers.length; i++) {
+            if(oraFile.layers[i].visibility != 'hidden') {
+                if(startLayer < 0) {
+                    startLayer = i;
                 }
 
-                layerIdx++;
-            }
-
-            context.putImageData(imgData, 0, 0);
-        } else {
-            while (layerCount > layerIdx) {
-                layer = this.layers[layerIdx];
-                if (layer && layer.image && (layer.visibility === 'visible' || layer.visibility === undefined)) {
-                    if (layer.opacity === undefined) {
-                        context.globalAlpha = 1;
-                    } else {
-                        context.globalAlpha = layer.opacity;
-                    }
-
-                    context.drawImage(layer.image, layer.x, layer.y);
-                }
-
-                layerIdx++;
+                layerCache[i] = {
+                    opacity: oraFile.layers[i].opacity,
+                    composite: oraFile.layers[i].composite,
+                    data: oraFile.layers[i]
+                        .toCanvas(tmpCanvas, oraFile.width, oraFile.height)
+                        .getContext('2d')
+                };
             }
         }
-    };
+
+        if(startLayer < 0) {
+            if(ondone) {
+                ondone();
+            }
+            return;
+        }
+
+        function onTaskDone(e) {
+            if(e.data.result) {
+                // paint result
+                context.putImageData(e.data.result, 0, 0);
+                if(ondone) {
+                    ondone();
+                }
+
+                return;
+            }
+
+            var nextLayer = e.data.layer + 1;
+
+            while(nextLayer < oraFile.layers.length && !layerCache[nextLayer]) {
+                nextLayer++;
+            }
+
+            if(nextLayer >= oraFile.layers.length) {
+                worker.postMessage({ done : true });
+                return;
+            }
+
+            var nextBatch = {
+                layer: nextLayer,
+                src : layerCache[nextLayer].data.getImageData(0, 0, oraFile.width, oraFile.height),
+                opacity: layerCache[nextLayer].opacity,
+                filter: layerCache[nextLayer].composite
+            };
+
+            worker.postMessage(nextBatch);
+        }
+
+        worker = new Worker(obj.ora.scriptsPath + 'blender.js');
+        worker.onmessage = onTaskDone;
+
+        var initData = {
+            layer: startLayer,
+            src: layerCache[startLayer].data.getImageData(0, 0, oraFile.width, oraFile.height),
+            opacity: layerCache[startLayer].opacity,
+            filter: layerCache[startLayer].composite,
+            dst: context.getImageData(0, 0, oraFile.width, oraFile.height)
+        };
+
+        worker.postMessage(initData);
+    }
+
+    function compose (oraFile, context, ondone) {
+        var imgData = context.getImageData(0, 0, oraFile.width, oraFile.height),
+            layerCount = oraFile.layers.length,
+            layerIdx = 0,
+            layer, tmpCanvas;
+
+        while (layerCount > layerIdx) {
+            layer = oraFile.layers[layerIdx];
+
+            if (layer && layer.image && (layer.visibility === 'visible' || layer.visibility === undefined)) {
+                var filter = obj.blending[layer.composite] || obj.blending.normal;
+                var srcCanvas = layer.toCanvas(tmpCanvas, oraFile.width, oraFile.height);
+                var src = srcCanvas.getContext('2d').getImageData(0, 0, srcCanvas.width, srcCanvas.height).data;
+                obj.blending.blend(src, imgData.data, layer.opacity, filter);
+            }
+
+            layerIdx++;
+        }
+
+        context.putImageData(imgData, 0, 0);
+
+        if(ondone) {
+            ondone();
+        }
+    }
+
+    function composeNoBlend(oraFile, context, ondone) {
+        var layerCount = oraFile.layers.length,
+            layerIdx = 0,
+            layer;
+
+        while (layerCount > layerIdx) {
+            layer = oraFile.layers[layerIdx];
+            if (layer && layer.image && (layer.visibility === 'visible' || layer.visibility === undefined)) {
+                if (layer.opacity === undefined) {
+                    context.globalAlpha = 1;
+                } else {
+                    context.globalAlpha = layer.opacity;
+                }
+
+                context.drawImage(layer.image, layer.x, layer.y);
+            }
+
+            layerIdx++;
+        }
+
+        if(ondone) {
+            ondone();
+        }
+    }
 
     // Add a new layer to the image
     // index can optionally specify the position for the new layer
@@ -312,6 +427,8 @@
         load: loadFile,
 
         // enable use of prerendered image instead of layers (if present)
-        enablePrerendered : true
+        enablePrerendered : true,
+        enableWorkers : true,
+        scriptsPath : ''
     };
 })(this);
