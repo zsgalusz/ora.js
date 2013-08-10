@@ -29,6 +29,10 @@
             .selected {
                 background: #CCCCCC;
             }
+
+            .hidden {
+                color: #888888;
+            }
         </style>
     </head>
     <body>
@@ -57,11 +61,11 @@
             </div>
             <ul id="layers"></ul>
             <div>
-                <label><input type="range" id="opacity" min="0" max="100" step="1" value="100" disabled>100%</label>
+                <label><input type="range" id="opacity" min="0" max="100" step="1" value="100" oninput="setOpacity()" disabled></label>
             </div>
             <div>
-                <input type="button" id="visibleToggle" value="Hide" disabled>
-                <select id="layerMode" disabled>
+                <input type="button" id="visibleToggle" value="Toggle" onclick="toggleLayer()" disabled>
+                <select id="layerMode" onchange="setLayerMode()" disabled>
                     <option value="svg:src-over">Normal</option>
                     <option value="svg:multiply">Multiply</option>
                     <option value="svg:screen">Screen</option>

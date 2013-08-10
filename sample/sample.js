@@ -29,7 +29,7 @@ function disableEditing() {
     selectedLayer = undefined;
 }
 
-function renderLayers() {
+function renderLayers(keepSelection) {
     layerList.innerHTML = '';
 
     if(oraFile) {
@@ -41,20 +41,35 @@ function renderLayers() {
         while(i) {
             layerItem = document.createElement('li');
             layerItem.innerHTML = oraFile.layers[i - 1].name || '<i>untitled layer</i>';
+            layerItem.onclick = selectLayer.bind(undefined, i - 1);
+            if(oraFile.layers[i - 1].visibility == 'hidden') {
+                layerItem.className = 'hidden';
+            }
+
             layerList.appendChild(layerItem);
             i--;
-            layerItem.onclick = selectLayer.bind(undefined, i);
+        }
+
+        if(!keepSelection) {
+            selectedLayer = -1;
+        }
+        else {
+            selectLayer(selectedLayer);
         }
     }
 }
 
 function selectLayer(index) {
+    var layer = layerList.childNodes[layerList.size - selectedLayer - 1];
     if(selectedLayer >= 0) {
-        layerList.childNodes[layerList.size - selectedLayer - 1].className = '';
+        layer.className = layer.className.replace('selected', '').trim();
     }
 
     selectedLayer = index;
-    layerList.childNodes[layerList.size - index - 1].className = 'selected';
+    layer = layerList.childNodes[layerList.size - selectedLayer - 1];
+    document.getElementById('opacity').value = oraFile.layers[selectedLayer].opacity * 100;
+    document.getElementById('layerMode').value = oraFile.layers[selectedLayer].composite;
+    layer.className += ' selected';
 }
 
 function drawComposite() {
@@ -123,7 +138,9 @@ function addLayer() {
             layer.width = this.width;
             layer.height = this.height;
 
-            renderLayers();
+            selectedLayer = oraFile.layers.length - 1;
+
+            renderLayers(true);
             drawComposite();
         };
     }
@@ -132,7 +149,6 @@ function addLayer() {
 function deleteLayer() {
     if(oraFile && selectedLayer >= 0) {
         oraFile.layers.splice(selectedLayer, 1);
-        selectedLayer = -1;
 
         renderLayers();
         drawComposite();
@@ -145,7 +161,9 @@ function upLayer() {
         oraFile.layers[selectedLayer + 1] = oraFile.layers[selectedLayer];
         oraFile.layers[selectedLayer] = tmp;
 
-        renderLayers();
+        selectedLayer += 1;
+
+        renderLayers(true);
         drawComposite();
     }
 }
@@ -156,9 +174,34 @@ function downLayer() {
         oraFile.layers[selectedLayer - 1] = oraFile.layers[selectedLayer];
         oraFile.layers[selectedLayer] = tmp;
 
-        renderLayers();
+        selectedLayer -= 1;
+
+        renderLayers(true);
         drawComposite();
     }
+}
+
+function setOpacity() {
+    oraFile.layers[selectedLayer].opacity = document.getElementById('opacity').value / 100;
+    drawComposite();
+
+}
+
+function setLayerMode() {
+    oraFile.layers[selectedLayer].composite = document.getElementById('layerMode').value;
+    drawComposite();
+}
+
+function toggleLayer() {
+    if (oraFile.layers[selectedLayer].visibility == 'visible') {
+        oraFile.layers[selectedLayer].visibility = 'hidden';
+    }
+    else {
+        oraFile.layers[selectedLayer].visibility = 'visible';
+    }
+
+    renderLayers(true);
+    drawComposite();
 }
 
 function pickOra() {
