@@ -24,11 +24,11 @@ In your HTML file, include the libraries:
 
 ```
 
-Note that you might need extra configuration for zip.js to find its own scripts:
+Note that if you use web workers you might need extra configuration to find worker scripts:
 
 ```
     <script type="text/javascript">
-        zip.workerScriptsPath = "resources/";
+        ora.scriptsPath = "resources/";
     </script>
 ```
 
@@ -38,7 +38,9 @@ Pass the .ora file to ora.load(), and use drawThumbnail() or drawComposite() to 
 ```
 ora.load(fileInput.files[0], function(oraFile) {
     oraFile.drawThumbnail(thumbCanvas);               
-    oraFile.drawComposite(imageCanvas);
+    oraFile.drawComposite(imageCanvas, function() {
+        // update things on completion, hide progress bars, etc.
+    });
 });
 ```
 
