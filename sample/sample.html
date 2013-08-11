@@ -3,83 +3,66 @@
     <head>
         <title>ora.js sample</title>
         <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro' rel='stylesheet' type='text/css'>
-        <style type="text/css">
-            html,
-            button,
-            input,
-            label {
-                color: #333333;
-            }
-
-            body {
-                font-size: 14px;
-                line-height: 20px;
-                font-family: 'Source Sans Pro', Arial, Helvetica, sans-serif;
-            }
-
-            #image {
-                border: 3px dashed #333333;
-                margin: 5px;
-            }
-
-            #layers {
-                display: none;                 
-            }
-
-            .selected {
-                background: #CCCCCC;
-            }
-
-            .hidden {
-                color: #888888;
-            }
-        </style>
+        <link href="sample.css" rel="stylesheet" type="text/css">
     </head>
     <body>
-        <h1>ora.js sample</h1>
-        <div>
-            <h2>Image</h2>
-            <div>
-                <input type="file" id="fileInput" onchange="loadFile()" style="display: none">
-                <input id="saveButton" type="button" value="Save" onclick="saveFile()" disabled>
-                <input id="loadButton" type="button" value="Load" onclick="pickOra()">
-                <label>Width: <input type="text" id="newWidth" value="100" size="4">px</label>
-                <label>Height: <input type="text" id="newHeight" value="100" size="4">px</label>
-                <input type="button" id="newButton" value="Create" onclick="createFile()">
-                <p id="thumbHint" style="display: none">Click on thumbnail to enlarge</p>
-            </div>
-            <canvas id="image"></canvas>
-        </div>
-        <div>
-            <h2>Layers</h2>
-            <div>
-                <input type="file" id="layerFile" onchange="addLayer()" accept="image/png" style="display: none">
-                <input type="button" id="addLayer" value="Add" onclick="pickLayer()" disabled>
-                <input type="button" id="delLayer" value="Delete" onclick="deleteLayer()" disabled>
-                <input type="button" id="upLayer" value="Up" onclick="upLayer()" disabled>
-                <input type="button" id="downLayer" value="Down" onclick="downLayer()" disabled>
-            </div>
-            <ul id="layers"></ul>
-            <div>
-                <label><input type="range" id="opacity" min="0" max="100" step="1" value="100" oninput="setOpacity()" disabled></label>
-            </div>
-            <div>
-                <input type="button" id="visibleToggle" value="Toggle" onclick="toggleLayer()" disabled>
-                <select id="layerMode" onchange="setLayerMode()" disabled>
-                    <option value="svg:src-over">Normal</option>
-                    <option value="svg:multiply">Multiply</option>
-                    <option value="svg:screen">Screen</option>
-                    <option value="svg:overlay">Overlay</option>
-                    <option value="svg:color-dodge">Color dodge</option>
-                    <option value="svg:color-burn">Color burn</option>
-                    <option value="svg:darken">Darken</option>
-                    <option value="svg:lighten">Lighten</option>
-                    <option value="svg:plus">Additive</option>
-                    <option value="svg:difference">Difference</option>
-                    <option value="svg:hard-light">Hard light</option>
-                    <option value="svg:soft-light">Soft light</option>
-                </select>
-            </div>
+        <header>
+            <h1>ora.js sample</h1>
+        </header>
+        <div class="mainContent">
+            <section id="imageBox">
+                <div>
+                    <h2>Image</h2>
+                    <input type="file" id="fileInput" onchange="loadFile()" accept=".ora,image/openraster" style="display: none">
+                    <input id="saveButton" type="button" value="Save" onclick="saveFile()" disabled>
+                    <input id="loadButton" type="button" value="Load" onclick="pickOra()">
+                    <label>Width: <input type="text" id="newWidth" value="100" size="4">px</label>
+                    <label>Height: <input type="text" id="newHeight" value="100" size="4">px</label>
+                    <input type="button" id="newButton" value="Create" onclick="createFile()">
+                </div>
+                <div id="progressBar">
+                    <p>Redrawing...</p>
+                    <progress></progress>
+                </div>
+                <div id="canvasBox"><canvas id="image"></canvas></div>
+            </section>
+            <aside id="infoBox">
+                <div>
+                    <h2>Thumbnail</h2>
+                    <canvas id="thumbnail" width="256" height="256"></canvas>
+                </div>
+                <div>
+                    <h2>Layers</h2>
+                    <div class="buttonRow">
+                        <input type="file" id="layerFile" onchange="addLayer()" accept="image/png" style="display: none">
+                        <input type="button" id="addLayer" value="Add" onclick="pickLayer()" disabled>
+                        <input type="button" id="delLayer" value="Delete" onclick="deleteLayer()" disabled>
+                        <input type="button" id="upLayer" value="Up" onclick="upLayer()" disabled>
+                        <input type="button" id="downLayer" value="Down" onclick="downLayer()" disabled>
+                    </div>
+                    <ul id="layers"></ul>
+                    <div class="buttonRow">
+                        <input type="range" id="opacity" min="0" max="100" step="1" value="100" onchange="setOpacity()" disabled>
+                    </div>
+                    <div class="buttonRow">
+                        <input type="button" id="visibleToggle" value="Toggle" onclick="toggleLayer()" disabled>
+                        <select id="layerMode" onchange="setLayerMode()" disabled>
+                            <option value="svg:src-over">Normal</option>
+                            <option value="svg:multiply">Multiply</option>
+                            <option value="svg:screen">Screen</option>
+                            <option value="svg:overlay">Overlay</option>
+                            <option value="svg:color-dodge">Color dodge</option>
+                            <option value="svg:color-burn">Color burn</option>
+                            <option value="svg:darken">Darken</option>
+                            <option value="svg:lighten">Lighten</option>
+                            <option value="svg:plus">Additive</option>
+                            <option value="svg:difference">Difference</option>
+                            <option value="svg:hard-light">Hard light</option>
+                            <option value="svg:soft-light">Soft light</option>
+                        </select>
+                    </div>
+                </div>
+            </aside>
         </div>
 
         <script type="text/javascript" src="../zip.js"></script>

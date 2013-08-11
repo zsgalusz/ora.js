@@ -2,6 +2,7 @@ var oraFile,
     layerList = document.getElementById('layers'),
     canvas = document.getElementById('image'),
     backCanvas = document.createElement('canvas'),
+    progress = document.getElementById('progressBar'),
     selectedLayer = -1,
     redrawInProgress = false,
     redrawRequested = false;
@@ -13,7 +14,6 @@ function enableEditing() {
     document.getElementById('visibleToggle').disabled = false;
     document.getElementById('opacity').disabled = false;
     document.getElementById('layerMode').disabled = false;
-    layerList.style.display = "block";
     document.getElementById('upLayer').disabled = false;
     document.getElementById('downLayer').disabled = false;
 }
@@ -25,7 +25,6 @@ function disableEditing() {
     document.getElementById('visibleToggle').disabled = true;
     document.getElementById('opacity').disabled = true;
     document.getElementById('layerMode').disabled = true;
-    layerList.style.display = "none";
     document.getElementById('upLayer').disabled = true;
     document.getElementById('downLayer').disabled = true;
     selectedLayer = undefined;
@@ -84,7 +83,12 @@ function drawComposite() {
         return;
     }
 
-    oraFile.drawComposite(backCanvas, function() {        redrawInProgress = false;
+    redrawInProgress = true;
+    progress.style.display = 'block';
+    canvas.style.opacity = 0.3;
+
+    oraFile.drawComposite(backCanvas, function() {
+        redrawInProgress = false;
 
         if(!redrawRequested) {
             canvas.width = backCanvas.width;
@@ -92,30 +96,23 @@ function drawComposite() {
             var ctx = canvas.getContext('2d');
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(backCanvas, 0, 0);
+            progress.style.display = 'none';
+            canvas.style.opacity = 1;
+            enableEditing();
         }
         else {
             redrawRequested = false;
             drawComposite();
         }
     });
-    
 }
 
 function onLoadComplete(loadedOra) {
-    function enlargeThumb() {
-        oraFile.drawComposite(this);
-        document.getElementById('thumbHint').style.display = 'none';
-        enableEditing();
-        canvas.removeEventListener(enlargeThumb);
-    }
-
     oraFile = loadedOra;
 
     renderLayers();
-    oraFile.drawThumbnail(canvas);
-
-    document.getElementById('thumbHint').style.display = 'block';
-    canvas.addEventListener('click', enlargeThumb);
+    oraFile.drawThumbnail(document.getElementById('thumbnail'));
+    drawComposite();
 }
 
 function loadFile() {
@@ -132,17 +129,35 @@ function createFile() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     oraFile = new ora.Ora(canvas.width, canvas.height);
+    renderLayers();
+    oraFile.drawThumbnail(thumbnail);
+    drawComposite();
     enableEditing();
 }
 
 function saveFile() {
     if(oraFile) {
+        var filename = 'orafile.ora';
         oraFile.save(function(blob) {
              if(window.saveAs) {
-                window.saveAs(blob, 'orafile.ora');
+                window.saveAs(blob, filename);
              } else {
                 var uri = URL.createObjectURL(blob);
-                window.open(uri, '_blank');
+                //window.open(uri, '_blank');
+
+                var xhr = new XMLHttpRequest();
+                xhr.responseType = 'blob';
+                xhr.onload = function() {
+                    var a = document.createElement('a');
+                    a.href = window.URL.createObjectURL(xhr.response); // xhr.response is a blob    
+                    a.download = filename; // Set the file name.    
+                    a.style.display = 'none';
+                    document.body.appendChild(a);
+                    a.click();
+                    delete a;
+                };
+                xhr.open('GET', uri);
+                xhr.send();
             }
         });
     }
@@ -226,21 +241,9 @@ function toggleLayer() {
 }
 
 function pickOra() {
-    var event = new MouseEvent('click', {
-        'view': window,
-        'bubbles': true,
-        'cancelable': true
-    });
-
-    document.getElementById('fileInput').dispatchEvent(event);
+    document.getElementById('fileInput').click();
 }
 
 function pickLayer() {
-    var event = new MouseEvent('click', {
-        'view': window,
-        'bubbles': true,
-        'cancelable': true
-    });
-
-    document.getElementById('layerFile').dispatchEvent(event);
+    document.getElementById('layerFile').click();
 }
