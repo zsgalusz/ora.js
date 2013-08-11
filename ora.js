@@ -56,14 +56,18 @@
     }
 
     // Draw layer onto a new canvas element
-    Layer.prototype.toCanvas = function (canvas, width, height) {
+    Layer.prototype.toCanvas = function (canvas, width, height, noOffset) {
         var tmpCanvas = canvas || document.createElement('canvas');
         tmpCanvas.width = width || this.width;
         tmpCanvas.height = height || this.height;
 
         var tmpCtx = tmpCanvas.getContext('2d');
         tmpCtx.clearRect(0, 0, tmpCanvas.width, tmpCanvas.height);
-        tmpCtx.drawImage(this.image, this.x, this.y);
+        if(noOffset) {
+            tmpCtx.drawImage(this.image, 0, 0);
+        } else {
+            tmpCtx.drawImage(this.image, this.x, this.y);
+        }
         return tmpCanvas;
     };
 
@@ -206,7 +210,7 @@
             celem.setAttribute('opacity', layer.opacity);
             celem.setAttribute('visibility', layer.visibility);
 
-            url = layer.toCanvas().toDataURL('image/png');
+            url = layer.toCanvas(undefined, layer.width, layer.height, true).toDataURL('image/png');
             name = 'layer' + i + '.png';
             celem.setAttribute('src', 'data/' + name);
             data.addData64URI(name, url);
@@ -216,26 +220,31 @@
 
         fs.root.addText('stack.xml', serializer.serializeToString(xmlDoc));
 
-        this.drawComposite(tmpCanvas);
-        url = tmpCanvas.toDataURL('image/png');
-        fs.root.addData64URI('mergedimage.png', url);
-
-        resize(tmpCanvas, 256, 256, function() {
+        this.drawComposite(tmpCanvas, function() {
             url = tmpCanvas.toDataURL('image/png');
-            thumbs.addData64URI('thumbnail.png', url);
+            fs.root.addData64URI('mergedimage.png', url);
 
-            fs.exportBlob(ondone, 'image/openraster');
+            resize(tmpCanvas, 256, 256, function() {
+                url = tmpCanvas.toDataURL('image/png');
+                thumbs.addData64URI('thumbnail.png', url);
+
+                fs.exportBlob(ondone, 'image/openraster');
+            });
         });
     };
 
     // Draw the thumbnail into a canvas element
     OraFile.prototype.drawThumbnail = function (canvas) {
+        var context = canvas.getContext('2d');
+
         if (this.thumbnail) {
             canvas.width = this.thumbnail.width;
             canvas.height = this.thumbnail.height;
-            var context = canvas.getContext('2d');
             context.clearRect(0, 0, canvas.width, canvas.height);
             context.drawImage(this.thumbnail, 0, 0);
+        }
+        else {
+            context.clearRect(0, 0, canvas.width, canvas.height);
         }
     };
 
@@ -310,7 +319,7 @@
                 if(ondone) {
                     ondone();
                 }
-
+                worker.terminate();
                 return;
             }
 
