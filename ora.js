@@ -127,7 +127,7 @@
 
         function loadStack(ondone) {
             var stackFile = fs.find('stack.xml');
-            stackFile.getText(function (text) {
+            var onExtract = function(text) {
                 var xml;
                 // http://stackoverflow.com/questions/649614/xml-parsing-of-a-variable-string-in-javascript
                 var parseXml;
@@ -145,6 +145,15 @@
                 that.height = img.getAttribute('h');
 
                 loadLayers(img, ondone);
+            };
+
+            // for some reason Firefox (23.0.1 and earlier) doesn't like getText, so we roll our own
+            stackFile.getBlob("text/xml", function (blob) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    onExtract(e.target.result);
+                };
+                reader.readAsText(blob, 'UTF-8');
             });
         }
 
