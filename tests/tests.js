@@ -1,5 +1,5 @@
 ora.scriptsPath = '../';
-var blob;
+var blob, oraFile;
 //ora.enableWorkers = false;
 
 function loadFile(url, callback) {
