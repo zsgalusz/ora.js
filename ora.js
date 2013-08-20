@@ -19,6 +19,7 @@
     function resize(canvas, width, height, callback) {
         if(canvas.width <= width && canvas.height <= height) {
             callback();
+            return;
         }
 
         var ctx = canvas.getContext('2d'),

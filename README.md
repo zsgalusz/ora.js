@@ -81,4 +81,4 @@ oraFile.save(function (blob) {
 
 Dependencies
 ---
-The project is using a slightly modified version the [zip.js](http://gildas-lormeau.github.io/zip.js/) library.
+The project is using a slightly modified version of the [zip.js](http://gildas-lormeau.github.io/zip.js/) library.
